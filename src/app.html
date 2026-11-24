@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Hashword</title>
+  <link rel="stylesheet" href="app.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <main>
+    <header><span class="mark" aria-hidden="true">#</span><div><h1>Hashword</h1><p>One master password. Your familiar passwords.</p></div></header>
+    <p id="context" class="muted">Loading site settings…</p>
+    <form id="generator" autocomplete="off">
+      <fieldset id="controls" disabled>
+        <label for="domain">Password domain</label>
+        <input id="domain" list="domains" required spellcheck="false" autocapitalize="none" placeholder="example.com">
+        <datalist id="domains"></datalist>
+        <p class="hint">Use the exact domain you used before. A subdomain produces a different password.</p>
+        <div class="row">
+          <div><label for="length">Length</label><select id="length"><option value="8">8 characters</option><option value="16" selected>16 characters</option></select></div>
+          <div><label for="generation">Generation</label><input id="generation" type="number" step="any" value="1" required aria-describedby="generation-help"></div>
+        </div>
+        <p id="generation-help" class="hint">Need a new password? Increase Generation and save the new value.</p>
+        <label class="check"><input id="symbols" type="checkbox" checked> Include symbols</label>
+        <label for="master">Master password</label>
+        <input id="master" type="password" autocomplete="off" spellcheck="false" autocapitalize="none" required>
+        <p class="hint">Stays in this window. Never saved or sent to the website.</p>
+        <button id="generate" type="submit" class="primary">Generate password</button>
+        <section id="result" hidden aria-label="Generated password">
+          <label for="password">Your password</label>
+          <input id="password" type="password" readonly autocomplete="off" spellcheck="false">
+          <div class="actions"><button id="copy" type="button">Copy</button><button id="fill" type="button">Fill focused field</button><button id="reveal" type="button" aria-pressed="false">Show</button><button id="clear" type="button">Clear</button></div>
+        </section>
+        <details><summary>Site notes and settings</summary><label for="notes">Notes (saved unencrypted)</label><textarea id="notes" rows="2"></textarea><button id="save" type="button">Save settings</button></details>
+      </fieldset>
+    </form>
+    <p id="status" role="status" aria-live="polite"></p>
+    <footer><button id="manage" type="button">Manage sites & backups</button><span>Legacy-compatible · offline</span></footer>
+    <section id="management" hidden aria-labelledby="sites-heading">
+      <h2 id="sites-heading">Your sites</h2>
+      <p class="hint">Backups contain domains, settings, dates and notes. Keep a copy: these settings are needed to recreate your passwords.</p>
+      <div class="actions"><button id="backup" type="button">Download backup</button><label class="file-button">Restore backup<input id="restore" type="file" accept=".json,application/json"></label></div>
+      <label for="search">Find a site</label><input id="search" type="search" placeholder="Filter domains">
+      <ul id="sites"></ul>
+    </section>
+  </main>
+</body>
+</html>

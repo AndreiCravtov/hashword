@@ -38,7 +38,7 @@
                 nixd
                 nixfmt
 
-                # Add here
+                nodejs_24
               ];
             };
           };

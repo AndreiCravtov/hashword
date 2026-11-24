@@ -1,43 +1,59 @@
-No password is ever stored within the extension, or anywhere else for that matter!
+# Hashword
 
-How do I use it?
+A small, offline TypeScript rewrite of [Michael Meisel's Hashword](https://github.com/mmeisel/hashword), for Chrome and Firefox. No runtime dependencies, framework, background process, telemetry, or network requests. The original password derivation and domain rules are preserved.
 
-1. Click in the password field on any web site.
-2. Click the Hashword button in your browser toolbar (or better yet, assign it a keyboard shortcut in your extension settings).
-3. Type your master password and hit enter. Hashword will fill in the password field for you.
-4. Log in!
+## Build
 
+```sh
+nix develop
+npm ci
+npm run verify
+```
 
-Is Hashword right for me?
+Alternatively use Node 22.18+ (the Nix shell supplies Node 24). `npm run verify` type-checks, runs compatibility tests and builds all targets. `npm run build` only builds. Configuration is limited to `package.json`, `tsconfig.json` and `build.ts`, alongside the existing Nix setup. The build script contains both browser manifests.
 
-That depends -- how paranoid are you?
+## Install
 
-If you answered "not very", go with the convenience of a more full-featured password manager. I recommend LastPass.
+**Chrome 120+ / Chromium:** open `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select `dist/chrome`. Keep this folder at a stable path. Pin Hashword in the toolbar. Rebuild and click Reload there after changes.
 
-If you answered "WHO WANTS TO KNOW?!", then Hashword is for you! It's for those of us (myself included) that don't trust ANYONE to hold on to our passwords for us. If you're in this category, keep reading.
+**Firefox 140+:** open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**, and select `dist/firefox/manifest.json`. Temporary installations disappear on browser restart; export your settings before removing one. For a permanent installation on normal Firefox, submit a ZIP of the contents of `dist/firefox` to Mozilla for **unlisted signing**, then install the signed XPI. Signing/publication has not been performed by this project. The stable Firefox ID is `hashword@hashword.local`; choose your final ID before distributing it and retain it across releases.
 
+Both browsers support the toolbar action shortcut, default **Ctrl+Shift+H** (Command+Shift+H on macOS); change it in the browser's extension shortcut settings if it conflicts.
 
-How is Hashword different from other password managers?
+## Bring your existing passwords across
 
-There are basically two types of password managers out there: those that save your passwords, and those that don't.
+1. In the old extension's Site List, export/download a JSON backup before removing it. A separately installed fork normally has a different extension ID and cannot read the old installation's storage.
+2. Open the new extension's **Manage sites & backups**, then **Restore backup**. It reads the original `{ hashwordVersion, data: [{ domain, settings }] }` format. Restore validates every entry before writing anything and asks before replacing matching sites; other sites remain saved.
+3. Check the displayed password domain, length, generation, symbols and notes against your old setup. Try a known account before relying on the rewrite. Do not share your master password with anyone to test it.
 
-In the first category are services like LastPass and 1password. They also have sophisticated browser extensions that will fill in your username and password automatically. You can choose passwords as you normally would, or let the extension generate them for you. But whatever you do, these services send your passwords to their servers and store them there. You have to trust them neither to get hacked nor share your information with third parties.
+Length (8 or 16), generation, symbols and notes are stored per domain, along with created/last-used dates. Older string-valued lengths are migrated to numbers. The original flat `chrome.storage.local` layout remains compatible when updating an installation with the same ID. Backups contain settings and notes, never the master or generated password. Keep them private and make independent copies.
 
-Hashword falls in the second category, along with the tools that inspired it, such as PwdHash and SuperGenPass. These tools generate your passwords on-demand given a master password and the URL of the web site you are visiting. They use a cryptographic hash function to guarantee that the master password cannot be recovered from generated passwords. Hash functions also generate the same password each time for the same site, but different passwords across different sites (with extremely high probability). There is no need to save or store any password anywhere.
+The default is the original effective domain, unless you have saved settings for the full hostname. You can select either in the domain input, or enter the exact domain you previously used. **Changing any hashing setting or domain changes the password.** Generation is never advanced automatically; even historical zero, negative or fractional values are preserved.
 
-I wrote Hashword to address a few major shortcomings of the existing hash-based password tools I could find:
+Focus a website's password field, open Hashword, enter your master password and press Enter. Then choose **Fill focused field** or **Copy**. Filling uses only the focused, writable password input, including accessible frames and open shadow roots. The website receives only the generated password. Restricted browser pages and inaccessible cross-origin frames may require copy/paste. Hashword never submits a login form.
 
-- Many are bookmarklets, which are inherently insecure since they run within the web page you are logging in to. A malicious site could easily steal your master password without you knowing it. A browser extension is not accessible to web sites you visit, so it does not suffer from this problem.
+Use **Save settings** to save edits without generating a password. Generating also saves the selected settings. Edit/search/delete sites in the manager; deletion asks for confirmation because settings are needed to recover passwords.
 
-- Other Chrome extensions require a lot of permissions, typically the permission to read the content of all of the web sites you visit. You have to trust the extension developer not to use these powers for evil. Hashword requires absolutely no special permissions.
+## Independent offline recovery
 
-- Different web sites have different (and conflicting) requirements for passwords -- password length, presence of symbols, need to change your password from time to time, etc. Many of these tools didn't address this, or at least not in a general enough way. Hashword has a few simple options designed to allow you to generate passwords for any web site.
+Keep `dist/hashword-recovery.html` and a site-list backup somewhere safe. This single self-contained file opens directly from disk in a modern browser, without installing an extension, running Node, or contacting a server. Restore your backup, enter/select the correct domain, and generate. This recovery page keeps site settings only in memory; download a backup before closing it. If clipboard access is unavailable, reveal and select the output to copy manually.
 
+The master input is cleared immediately after derivation. Input and output are cleared after one minute of inactivity and when the page closes. JavaScript cannot guarantee erasure of all copies from memory. Copying puts the derived password on the system clipboard, where it stays until replaced. Notes are unencrypted; do not put master passwords in notes.
 
-How does it work?
+## Compatibility contract
 
-First, Hashword takes the master password you type, appends the domain of the web site you're using it on, and runs the whole thing through the SHA-3 cryptographic hash function (see http://en.wikipedia.org/wiki/SHA-3). This means that you can be confident that your master password is safe, even if an attacker knows you are using Hashword. It also means that, even if you always use the same master password, SHA-3 will output (with absurdly high probability) a unique bundle of bits for each web site.
+The old `CryptoJS.SHA3` name is misleading here. Hashword uses **Keccak**, not NIST SHA-3, with output length `pwLength * 4` bits. For 8/16-character passwords those are 32/64-bit digests, with sponge capacity twice that length. A SHA3-256 or SHAKE substitution, or truncating a larger hash, would produce different passwords.
 
-The input to the hash function also includes a "generation" number for sites that make you change your password from time to time (or if your password is compromised). Just increase the generation number to get a brand new password.
+The exact input is UTF-8 of `master + '@' + domain.toLowerCase() + '+' + generation`. There is no trimming, Unicode normalization, salt, or added key stretching. Keccak uses the original `0x01 … 0x80` padding. Digest words are encoded with the original rotating character classes, number positioning and `!#+,-./@` symbol alphabet. Lone UTF-16 surrogates are rejected as in CryptoJS. The short digest and fast derivation are retained for recovery compatibility, not presented as a new password-hardening design.
 
-Next, Hashword uses its own algorithm to convert the bits of the hash to a set of letters, numbers, and (optionally) symbols that you can use as a password. As far as I know, Hashword is unique among hash-based password generators in that it uses the ENTIRE hash to generate the password. In other words, there is a one-to-one mapping from hash to password. Other password generators simply truncate the hash once they have the appropriate number of characters. This means that, in theory, the passwords generated by Hashword have the same probability of collision as the hash function itself. The probabilities in play are so minuscule that this probably doesn't matter at all, but the ultra paranoid may find it comforting.
+`src/legacy-domains.json` is the frozen rule table extracted from the original `lib/tld.js`. Updating it to a modern public suffix list would change some existing passwords. `src/domains.ts` preserves its matching order and regex quirks. Each lookup behaves like a fresh original popup; the old library's accidental mutation of cached rules across multiple calls is not carried across lookups. Where the old popup threw (for example localhost), the full hostname is displayed explicitly instead.
+
+`tests/legacy-vectors.json` records **648 password cases and 6,110 domain cases** generated by executing the original files at commit `dbbed2a02f5d8f6e0e4a2e19fe27d7ef0c2219a1`. They include both lengths, symbol modes, generations, Unicode, whitespace, long multi-block inputs, private suffixes, wildcard rules and exceptions. Every domain case uses a fresh copy of the original rule table. These expected values were captured before replacing the implementation; tests require neither Git history nor the old JS libraries. Additional tests cover backup validation and migration.
+
+For an independent audit, extract `lib/sha3.js`, `src/common/hashword.js`, and `lib/tld.js` from that Git commit and compare `hw.getHashword()` and `tld.getDomain()` with the TypeScript equivalents using synthetic master passwords. Do not update reference outputs merely to make a changed implementation pass.
+
+## Permissions and browser references
+
+`storage` saves site metadata locally. `activeTab` grants access only when you invoke the extension. `scripting` fills the selected field, and `clipboardWrite` supports explicit copying. There are no persistent host permissions. The manifests use [Manifest V3 scripting](https://developer.chrome.com/docs/extensions/develop/migrate/api-calls) and Firefox's [no-data-collection declaration](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/browser_specific_settings).
+
+The MIT copyright notice is retained in `LICENSE`. The domain table derives from the original tld.js bundle and its historical public suffix data; it is compatibility data, not a current registry of domain ownership.

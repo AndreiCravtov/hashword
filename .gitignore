@@ -1,8 +1,6 @@
-.DS_Store
 node_modules/
-build/
 dist/
-hashword.sublime-workspace
+*.zip
 
 # env misc
 .direnv/*
