@@ -1,0 +1,280 @@
+{
+  "source": "Python 3 standard library hashlib.pbkdf2_hmac + hmac SHA-256 independent oracle, extended-v1",
+  "vectors": [
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 4,
+        "symbols": false,
+        "generation": 1
+      },
+      "password": "abV1"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 4,
+        "symbols": true,
+        "generation": 1
+      },
+      "password": "Cl-8"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 5,
+        "symbols": false,
+        "generation": 1
+      },
+      "password": "BcF2I"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 5,
+        "symbols": true,
+        "generation": 1
+      },
+      "password": "F.g17"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 7,
+        "symbols": false,
+        "generation": 1
+      },
+      "password": "en2Gyn3"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 7,
+        "symbols": true,
+        "generation": 1
+      },
+      "password": "4!#bGpc"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 9,
+        "symbols": false,
+        "generation": 1
+      },
+      "password": "hF3NmUEBi"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 9,
+        "symbols": true,
+        "generation": 1
+      },
+      "password": "Uoq@!#@7M"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 15,
+        "symbols": false,
+        "generation": 1
+      },
+      "password": "GQ90Uofvdkr9Gl8"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 15,
+        "symbols": true,
+        "generation": 1
+      },
+      "password": "#PV2X8PuluzQi@2"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 17,
+        "symbols": false,
+        "generation": 1
+      },
+      "password": "tw4sFEbeNyKjq8wuN"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 17,
+        "symbols": true,
+        "generation": 1
+      },
+      "password": "PiMZwGeqy4as4-ZYi"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 18,
+        "symbols": false,
+        "generation": 1
+      },
+      "password": "tCgtLkFg3kWBNvy2pN"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 18,
+        "symbols": true,
+        "generation": 1
+      },
+      "password": "oKw3Y!-744k/IJekBW"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 32,
+        "symbols": false,
+        "generation": 1
+      },
+      "password": "ne82OQOiXDmUzPO24ddnndIjg6wrdsnE"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 32,
+        "symbols": true,
+        "generation": 1
+      },
+      "password": "rkxxOd#1PxeBwnPHUlBX0ahboMoIx,r#"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 64,
+        "symbols": false,
+        "generation": 1
+      },
+      "password": "GmavtwQamIC6sXHRsKn59RgcKEpWqV59mFgURZSI35IQf7zt3AYctMGo2cNWcm4o"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 64,
+        "symbols": true,
+        "generation": 1
+      },
+      "password": "6w/VHm7ZfKyA/mUE70xSbC60gdyEvwPanVVdukH!UgOV@!dHX#4ank74X8nzMxy2"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 128,
+        "symbols": false,
+        "generation": 1
+      },
+      "password": "qKFrDGfJakvJFlrIzHa3WjzZQGX8HA9a6dviBNtwSTMkl5WAmYpNKm62Q93MMH15XEy8hW8W9z5RgFuCFWP8dNUF31tuVRAqzTKuQC10hgFHqqswIW7I7VzQeYlEbB2U"
+    },
+    {
+      "domain": "EXAMPLE.COM",
+      "master": "test master password",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 128,
+        "symbols": true,
+        "generation": 1
+      },
+      "password": "M#4keBtkd9S.L,VZ1xU,hRgY4vrSnl!k#-O!MoRYjEWM+/k3Y43+tMsEtlEgvg/SbmsgjVPYiu5+eQT2qxdc1@g.@7Vt,.YzaxO8PI+s3GtwTUFNs-k-qLAdp.,vUw@c"
+    },
+    {
+      "domain": "xn--bcher-kva.de",
+      "master": "\ud83d\udd11p\u00e4ss\u5bc6\u78bc",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 17,
+        "symbols": true,
+        "generation": 2
+      },
+      "password": "!rhB-d4hJ2-vr.jSs"
+    },
+    {
+      "domain": "xn--bcher-kva.de",
+      "master": " a space at both ends ",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 17,
+        "symbols": true,
+        "generation": 0
+      },
+      "password": "QDyrKcv2gvcq@Nj4c"
+    },
+    {
+      "domain": "xn--bcher-kva.de",
+      "master": "e\u0301",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 17,
+        "symbols": true,
+        "generation": -1
+      },
+      "password": "auJW2GF.@VnJSlg0e"
+    },
+    {
+      "domain": "xn--bcher-kva.de",
+      "master": "\u00e9",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 17,
+        "symbols": true,
+        "generation": 1.5
+      },
+      "password": "4xdOx3oikfM-9iQ/6"
+    },
+    {
+      "domain": "xn--bcher-kva.de",
+      "master": "\u0000\n\r\t",
+      "settings": {
+        "algorithm": "extended-v1",
+        "pwLength": 17,
+        "symbols": true,
+        "generation": 1000000
+      },
+      "password": "jJyXkJQ5Q8j!lPz@7"
+    }
+  ]
+}

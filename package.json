@@ -1,6 +1,6 @@
 {
-  "name": "hashword",
-  "version": "1.0.0",
+  "name": "re-hashword",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "engines": { "node": ">=22.18" },

@@ -1,4 +1,4 @@
-import { defaults, getHashword, type Settings } from './hashword.ts';
+import { defaults, deriveHashword, algorithmForLength, type Settings } from './hashword.ts';
 import { domainInfo } from './domains.ts';
 import { backupJSON, parseBackup, readSettings, readSites, validateDomain, type Sites } from './storage.ts';
 import { passwordField } from './fill.ts';
@@ -10,7 +10,8 @@ document.body.classList.toggle('popup', popup);
 const el = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const domain = el<HTMLInputElement>('domain');
 const master = el<HTMLInputElement>('master');
-const length = el<HTMLSelectElement>('length');
+const length = el<HTMLInputElement>('length');
+const lengthSlider = el<HTMLInputElement>('length-slider');
 const generation = el<HTMLInputElement>('generation');
 const symbols = el<HTMLInputElement>('symbols');
 const notes = el<HTMLTextAreaElement>('notes');
@@ -52,12 +53,20 @@ function currentDomain(): string {
   return value;
 }
 function settings(): Settings {
-  return readSettings({ ...sites[currentDomain()], pwLength: Number(length.value), generation: generation.valueAsNumber, symbols: symbols.checked, notes: notes.value });
+  return readSettings({ ...sites[currentDomain()], algorithm: algorithmForLength(length.valueAsNumber), pwLength: length.valueAsNumber, generation: generation.valueAsNumber, symbols: symbols.checked, notes: notes.value });
+}
+function describeLength(): void {
+  const count = length.valueAsNumber;
+  if (Number.isInteger(count) && count >= 4 && count <= 128) lengthSlider.value = String(count);
+  el('length-help').textContent = count === 8 || count === 16
+    ? 'Original Hashword algorithm — existing passwords stay the same.'
+    : 'Extended algorithm · Keep an updated backup to recover these passwords.';
 }
 function loadSite(): void {
   clear();
   const s = sites[domain.value.toLowerCase()] ?? defaults;
   length.value = String(s.pwLength);
+  describeLength();
   generation.value = String(s.generation);
   symbols.checked = s.symbols;
   notes.value = s.notes ?? '';
@@ -107,7 +116,12 @@ el<HTMLFormElement>('generator').onsubmit = event => {
     const key = currentDomain();
     const s = settings();
     let value: string;
-    try { value = getHashword(key, master.value, s); }
+    status('Generating password…');
+    try {
+      const pending = deriveHashword(key, master.value, s);
+      master.value = '';
+      value = await pending;
+    }
     finally { master.value = ''; }
     await persist(key, { ...s, accessDate: Date.now() });
     generated = { domain: key, settings: s, value };
@@ -119,6 +133,12 @@ el<HTMLFormElement>('generator').onsubmit = event => {
   });
 };
 for (const input of [master, length, generation, symbols, notes]) input.addEventListener('input', invalidate);
+length.addEventListener('input', describeLength);
+lengthSlider.addEventListener('input', () => {
+  length.value = lengthSlider.value;
+  describeLength();
+  invalidate();
+});
 domain.addEventListener('input', invalidate);
 domain.addEventListener('change', loadSite);
 el('clear').onclick = () => { clear(); status('Password cleared.'); master.focus(); };
@@ -132,13 +152,13 @@ el('copy').onclick = () => run(async () => {
   status('Copied. The clipboard keeps this password until you replace it.');
 });
 el('fill').onclick = () => run(async () => {
-  if (!generated || !activeTab) throw new Error('Open Hashword from a website to fill a password.');
+  if (!generated || !activeTab) throw new Error('Open re-hashword from a website to fill a password.');
   const tab = await api.tabs.get(activeTab.id);
-  if (tab.url !== activeTab.url) throw new Error('The page changed. Reopen Hashword on the intended page.');
+  if (tab.url !== activeTab.url) throw new Error('The page changed. Reopen re-hashword on the intended page.');
   // Probe without sending any secret. Only the selected frame receives the derived password.
   const frames = await api.scripting.executeScript({ target: { tabId: activeTab.id, allFrames: true }, func: passwordField });
   const focused = frames.filter(frame => frame.result?.focused);
-  if (focused.length !== 1) throw new Error('Focus one password field, then reopen Hashword. You can also copy and paste.');
+  if (focused.length !== 1) throw new Error('Focus one password field, then reopen re-hashword. You can also copy and paste.');
   const target = focused[0];
   const result = await api.scripting.executeScript({
     target: { tabId: activeTab.id, frameIds: [target.frameId] }, func: passwordField,
@@ -157,7 +177,7 @@ el('backup').onclick = () => run(async () => {
   // Read fresh storage so backups also include changes made in another extension window.
   if (extension) sites = readSites(await api.storage.local.get(null));
   const url = URL.createObjectURL(new Blob([backupJSON(sites)], { type: 'application/json' }));
-  const link = document.createElement('a'); link.href = url; link.download = 'hashword-site-list.json'; link.click();
+  const link = document.createElement('a'); link.href = url; link.download = 're-hashword-site-list.json'; link.click();
   setTimeout(() => URL.revokeObjectURL(url), 10_000); renderSites(); status('Backup downloaded.');
 });
 el<HTMLInputElement>('restore').onchange = event => run(async () => {
@@ -191,6 +211,7 @@ async function init(): Promise<void> {
   }
   el<HTMLButtonElement>('fill').disabled = !activeTab;
   loadSite(); renderSites(); el<HTMLFieldSetElement>('controls').disabled = false;
+  el('startup-help').hidden = true;
   if (domain.value) master.focus(); else domain.focus();
 }
 void init().catch(error => { status('Could not load settings: ' + String(error), true); });

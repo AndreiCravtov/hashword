@@ -1,5 +1,7 @@
 /** Hashword 0.6.3 compatibility. Do not substitute NIST SHA-3 or truncate a larger digest. */
 export interface Settings {
+  /** Missing means the original algorithm. Never infer a new algorithm when importing. */
+  algorithm?: 'legacy-v1' | 'extended-v1';
   pwLength: number;
   symbols: boolean;
   generation: number;
@@ -62,6 +64,7 @@ const symbols = '!#+,-./@';
 
 export function getHashword(domain: string, master: string, settings: Settings): string {
   validateSettings(settings);
+  if (settings.algorithm === 'extended-v1') throw new Error('Use deriveHashword for extended lengths.');
   const bytes = digest(master + '@' + domain.toLowerCase() + '+' + settings.generation, settings.pwLength * 4);
   const view = new DataView(bytes.buffer);
   let output = '';
@@ -87,9 +90,54 @@ export function getHashword(domain: string, master: string, settings: Settings):
 export function validateSettings(value: unknown): asserts value is Settings {
   if (!value || typeof value !== 'object') throw new Error('Missing site settings.');
   const s = value as Settings;
-  // Both lengths offered by the original UI. Refuse unsupported values rather than change a password.
-  if ((s.pwLength !== 8 && s.pwLength !== 16) || typeof s.symbols !== 'boolean' ||
+  const legacyLength = s.pwLength === 8 || s.pwLength === 16;
+  const validAlgorithm = s.algorithm === undefined || s.algorithm === 'legacy-v1' || s.algorithm === 'extended-v1';
+  const validLength = Number.isInteger(s.pwLength) && s.pwLength >= 4 && s.pwLength <= 128 &&
+    (s.algorithm === 'extended-v1' ? !legacyLength : legacyLength);
+  if (!validAlgorithm || !validLength || typeof s.symbols !== 'boolean' ||
       typeof s.generation !== 'number' || !Number.isFinite(s.generation)) {
-    throw new Error('Invalid settings: use length 8 or 16, a symbols flag, and a finite generation number.');
+    throw new Error('Invalid settings: 8/16 require the legacy algorithm; other integer lengths from 4–128 require extended-v1. Symbols must be boolean and generation finite.');
+  }
+}
+
+export function algorithmForLength(length: number): Settings['algorithm'] {
+  return length === 8 || length === 16 ? undefined : 'extended-v1';
+}
+
+/** Extended-v1 is a permanent compatibility contract; changes require a new version. */
+export async function deriveHashword(domain: string, master: string, settings: Settings): Promise<string> {
+  validateSettings(settings);
+  if (settings.algorithm !== 'extended-v1') return getHashword(domain, master, settings);
+  // Capture inputs before awaiting, and reject malformed UTF-16 rather than normalize it.
+  const { pwLength, generation, symbols: useSymbols } = settings;
+  encodeURIComponent(master);
+  encodeURIComponent(domain);
+  const utf8 = new TextEncoder();
+  const salt = utf8.encode(JSON.stringify(['hashword', 'extended-v1', domain.toLowerCase(), generation, pwLength, useSymbols]));
+  const passwordBytes = utf8.encode(master);
+  const key = await crypto.subtle.importKey('raw', passwordBytes, 'PBKDF2', false, ['deriveBits']);
+  passwordBytes.fill(0);
+  const seed = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 600_000 }, key, 256);
+  const streamKey = await crypto.subtle.importKey('raw', seed, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  new Uint8Array(seed).fill(0);
+  const required = ['ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz', '0123456789'];
+  if (useSymbols) required.push(symbols);
+  const alphabet = required.join('');
+  const limit = 256 - (256 % alphabet.length);
+  let counter = 0;
+  let candidate = '';
+  // Rejection sampling avoids modulo bias and positional rules. Rejected candidates
+  // consume stream bytes; the next candidate continues with the very next byte.
+  while (true) {
+    const block = new Uint8Array(await crypto.subtle.sign('HMAC', streamKey,
+      utf8.encode(JSON.stringify(['hashword', 'extended-v1', 'stream', counter++]))));
+    for (const byte of block) {
+      if (byte >= limit) continue;
+      candidate += alphabet[byte % alphabet.length];
+      if (candidate.length === pwLength) {
+        if (required.every(group => [...candidate].some(character => group.includes(character)))) return candidate;
+        candidate = '';
+      }
+    }
   }
 }

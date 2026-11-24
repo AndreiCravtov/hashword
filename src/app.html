@@ -4,14 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>Hashword</title>
+  <title>re-hashword</title>
   <link rel="stylesheet" href="app.css">
-  <script defer src="app.js"></script>
+  <!-- Direct source previews use the compiled bundle; the build rewrites this to app.js. -->
+  <script defer src="../dist/recovery/app.js"></script>
 </head>
 <body>
   <main>
-    <header><span class="mark" aria-hidden="true">#</span><div><h1>Hashword</h1><p>One master password. Your familiar passwords.</p></div></header>
+    <header><span class="mark" aria-hidden="true">#<span class="re-badge">re</span></span><div><h1>re-hashword</h1><p>One master password. Your familiar passwords.</p></div></header>
     <p id="context" class="muted">Loading site settings…</p>
+    <p id="startup-help" class="hint">If the fields stay disabled, the application could not start. For a source preview, run <code>npm run build</code> and reload this page. For an installed extension, reload it in your browser’s extension manager.</p>
+    <noscript><p class="error">Enable JavaScript in your browser to generate passwords. All generation happens locally.</p></noscript>
     <form id="generator" autocomplete="off">
       <fieldset id="controls" disabled>
         <label for="domain">Password domain</label>
@@ -19,9 +22,12 @@
         <datalist id="domains"></datalist>
         <p class="hint">Use the exact domain you used before. A subdomain produces a different password.</p>
         <div class="row">
-          <div><label for="length">Length</label><select id="length"><option value="8">8 characters</option><option value="16" selected>16 characters</option></select></div>
+          <div><label for="length">Length</label><input id="length" type="number" min="4" max="128" step="1" value="16" required aria-describedby="length-help"></div>
           <div><label for="generation">Generation</label><input id="generation" type="number" step="any" value="1" required aria-describedby="generation-help"></div>
         </div>
+        <input id="length-slider" type="range" min="4" max="128" step="1" value="16" aria-label="Password length" aria-describedby="length-help" list="length-marks">
+        <datalist id="length-marks"><option value="8" label="8"></option><option value="16" label="16"></option><option value="64" label="64"></option><option value="128" label="128"></option></datalist>
+        <p id="length-help" class="hint"></p>
         <p id="generation-help" class="hint">Need a new password? Increase Generation and save the new value.</p>
         <label class="check"><input id="symbols" type="checkbox" checked> Include symbols</label>
         <label for="master">Master password</label>

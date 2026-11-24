@@ -1,4 +1,5 @@
 import { validateSettings, type Settings } from './hashword.ts';
+import metadata from '../package.json' with { type: 'json' };
 
 export type Sites = Record<string, Settings>;
 export function validateDomain(domain: unknown): asserts domain is string {
@@ -14,6 +15,7 @@ export function readSettings(value: unknown): Settings {
     symbols: raw.symbols as boolean,
     generation: raw.generation as number,
   };
+  if (raw.algorithm !== undefined) result.algorithm = raw.algorithm as Settings['algorithm'];
   validateSettings(result);
   if (raw.notes !== undefined) {
     if (typeof raw.notes !== 'string') throw new Error('Invalid notes.');
@@ -56,5 +58,5 @@ export function parseBackup(text: string): Sites {
 }
 
 export function backupJSON(sites: Sites): string {
-  return JSON.stringify({ hashwordVersion: '1.0.0', data: Object.entries(readSites(sites)).map(([domain, settings]) => ({ domain, settings })) }, null, 2);
+  return JSON.stringify({ hashwordVersion: metadata.version, data: Object.entries(readSites(sites)).map(([domain, settings]) => ({ domain, settings })) }, null, 2);
 }
